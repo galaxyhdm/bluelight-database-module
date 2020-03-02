@@ -1,0 +1,76 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '4.0.2'
+}
+
+group 'dev.markusk'
+version '0.0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url 'https://jitpack.io'
+    }
+}
+
+dependencies {
+    implementation project(':util-module')
+
+    // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
+    // https://mvnrepository.com/artifact/com.google.collections/google-collections
+    implementation group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
+    implementation 'com.google.code.gson:gson:2.8.6'
+
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+}
+
+task sourcesForRelease(type: Copy) {
+    from 'src/main/java'
+    into 'build/filteredSrc'
+    filter(ReplaceTokens, tokens: [VERSION: version, DATE: getBuildDate(), TIME: getBuildTime()])
+}
+
+static def getBuildDate() {
+    return new Date().format('yyyy/MM/dd')
+}
+
+static def getBuildTime() {
+    return new Date().format('HH:mm:ss')
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+    source = sourcesForRelease.destinationDir
+    classpath = sourceSets.main.compileClasspath
+    dependsOn sourcesForRelease
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier.set('sources')
+    from "${buildDir}/filteredSrc"
+}
+
+jar {
+    archivesBaseName = project.name
+}
+
+shadowJar {
+    archiveClassifier.set('withDependencies')
+}
+
+build {
+    dependsOn clean
+    dependsOn jar
+    dependsOn sourcesJar
+    dependsOn shadowJar
+
+    jar.mustRunAfter clean
+    shadowJar.mustRunAfter sourcesJar
+}
