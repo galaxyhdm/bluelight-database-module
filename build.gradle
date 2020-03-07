@@ -2,14 +2,13 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'java'
-    id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '4.0.2'
 }
 
 group 'dev.markusk'
 version '0.0.1'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.11
 
 repositories {
     mavenCentral()
@@ -21,6 +20,10 @@ repositories {
 
 dependencies {
     implementation project(':util-module')
+    implementation project(':fetcher-api')
+
+    //https://github.com/ben-manes/caffeine
+    implementation 'com.github.ben-manes.caffeine:caffeine:2.8.1'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
