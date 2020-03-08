@@ -14,6 +14,7 @@ import org.postgresql.ds.PGConnectionPoolDataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
 public class PostgresDataManager implements AbstractDataManager {
 
@@ -75,71 +76,135 @@ public class PostgresDataManager implements AbstractDataManager {
 
   @Override
   public void addArticle(final Article article) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.addArticle(article);
+    } catch (Exception e) {
+      LOGGER.error("Error in addArticle", e);
+    }
   }
 
   @Override
-  public Article getArticle(final String id, final boolean loadTags) {
-    return null;
+  public Optional<Article> getArticle(final String id, final boolean loadTags) { // TODO: 08.03.2020 implement correctly
+    try (final SqlDao dao = this.getDao()) {
+      if (!loadTags) {
+        return Optional.ofNullable(dao.getArticle(id));
+      }
+    } catch (Exception e) {
+      LOGGER.error("Error in getArticle", e);
+    }
+    return Optional.empty();
   }
 
   @Override
   public void updateArticle(final Article article) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.updateArticle(article);
+    } catch (Exception e) {
+      LOGGER.error("Error in updateArticle", e);
+    }
   }
 
   @Override
   public void updateArticleContent(final Article article) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.updateArticleContent(article);
+    } catch (Exception e) {
+      LOGGER.error("Error in updateArticleContent", e);
+    }
   }
 
   @Override
   public boolean hasArticle(final String id) {
+    try (final SqlDao dao = this.getDao()) {
+      return dao.hasArticle(id);
+    } catch (Exception e) {
+      LOGGER.error("Error in hasArticle", e);
+    }
     return false;
   }
 
   @Override
   public void updateLocationLinks(final Article article) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.updateLocationLinks(article);
+    } catch (Exception e) {
+      LOGGER.error("Error in updateLocationLinks", e);
+    }
   }
 
   @Override
   public void updateTopicLinks(final Article article) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.updateTopicLinks(article);
+    } catch (Exception e) {
+      LOGGER.error("Error in updateTopicLinks", e);
+    }
   }
 
   @Override
   public void addLocation(final Location location) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.addLocation(location);
+    } catch (Exception e) {
+      LOGGER.error("Error in addLocation", e);
+    }
   }
 
   @Override
-  public Location getLocation(final String id) {
-    return null;
+  public Optional<Location> getLocation(final String id) {
+    try (final SqlDao dao = this.getDao()) {
+      return Optional.ofNullable(dao.getLocation(id));
+    } catch (Exception e) {
+      LOGGER.error("Error in getLocation", e);
+    }
+    return Optional.empty();
   }
 
   @Override
   public boolean hasLocation(final String id) {
+    try (final SqlDao dao = this.getDao()) {
+      return dao.hasLocation(id);
+    } catch (Exception e) {
+      LOGGER.error("Error in hasLocation", e);
+    }
     return false;
   }
 
   @Override
   public void addTopic(final Topic topic) {
-
+    try (final SqlDao dao = this.getDao()) {
+      dao.addTopic(topic);
+    } catch (Exception e) {
+      LOGGER.error("Error in addTopic", e);
+    }
   }
 
   @Override
-  public Topic getTopic(final String id) {
-    return null;
+  public Optional<Topic> getTopic(final String id) {
+    try (final SqlDao dao = this.getDao()) {
+      return Optional.ofNullable(dao.getTopic(id));
+    } catch (Exception e) {
+      LOGGER.error("Error in hasArticle", e);
+    }
+    return Optional.empty();
   }
 
   @Override
   public boolean hasTopic(final String id) {
+    try (final SqlDao dao = this.getDao()) {
+      return dao.hasTopic(id);
+    } catch (Exception e) {
+      LOGGER.error("Error in hasTopic", e);
+    }
     return false;
   }
 
   public PGConnectionPoolDataSource getDataSource() {
     return dataSource;
+  }
+
+  public AbstractFetcher getAbstractFetcher() {
+    return this.abstractFetcher;
   }
 
 }

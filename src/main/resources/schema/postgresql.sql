@@ -29,7 +29,7 @@ alter table topics
 create unique index if not exists topics_uuid_uindex
     on topics (uuid);
 
-create index if not exists topics_topic_index
+create unique index if not exists topics_topic_uindex
     on topics (topic);
 
 create table if not exists locations
@@ -49,7 +49,7 @@ alter table locations
 create unique index if not exists locations_uuid_uindex
     on locations (uuid);
 
-create index if not exists locations_location_index
+create unique index if not exists locations_location_uindex
     on locations (location);
 
 create table if not exists article_topic

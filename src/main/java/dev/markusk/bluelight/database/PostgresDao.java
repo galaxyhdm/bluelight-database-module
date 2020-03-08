@@ -1,5 +1,6 @@
 package dev.markusk.bluelight.database;
 
+import dev.markusk.bluelight.api.factory.FetcherFactory;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
@@ -11,21 +12,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class PostgresDao implements SqlDao {
 
   private static final Logger LOGGER = LogManager.getLogger();
 
+  private static final String SELECT_ARTICLE = "SELECT articles.* FROM articles WHERE article_id = ?;";
+  private static final String HAS_ARTICLE = "SELECT articles.article_id FROM articles WHERE article_id = ?";
+  private static final String SELECT_LOCATION = "SELECT locations.* FROM locations WHERE uuid = ?;";
+  private static final String HAS_LOCATION = "SELECT locations.uuid FROM locations WHERE uuid = ?";
+  private static final String SELECT_TOPIC = "SELECT topics.* FROM topics WHERE uuid = ?;";
+  private static final String HAS_TOPIC = "SELECT topics.uuid FROM topics WHERE uuid = ?";
+
   private static final String INSERT_ARTICLE =
       "INSERT INTO articles(article_id, title, url, release_time, fetch_time, file_hash, article_content) VALUES (?,?,?,?,?,?,?)";
+  private static final String INSERT_LOCATION =
+      "INSERT INTO locations(location, latitude, longitude, indexed) VALUES (?,?,?,false);";
+  private static final String INSERT_TOPIC = "INSERT INTO topics(topic) VALUES (?)";
+
+  private static final String UPDATE_ARTICLE_CONTENT = "UPDATE articles SET article_content=? WHERE article_id=?";
 
   private Connection connection;
+  private PostgresDataManager dataSource;
 
   public PostgresDao(final PostgresDataManager dataSource) throws SQLException {
+    this.dataSource = dataSource;
     this.connection = dataSource.getDataSource().getConnection();
   }
 
@@ -49,56 +61,128 @@ public class PostgresDao implements SqlDao {
     }
   }
 
+  @Override
   public void addArticle(final Article article) throws SQLException {
     try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_ARTICLE)) {
       preparedStatement.setString(1, article.getId());
       preparedStatement.setString(2, article.getTitle());
-
+      preparedStatement.setString(3, article.getUrl());
+      preparedStatement.setTimestamp(4, new Timestamp(article.getReleaseTime().getTime()));
+      preparedStatement.setTimestamp(5, new Timestamp(article.getFetchTime().getTime()));
+      preparedStatement.setString(6, article.getFileIdentification());
+      preparedStatement.setString(7, article.getContent());
+      preparedStatement.execute();
     }
   }
 
+  @Override
+  public Article getArticle(final String id) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(SELECT_ARTICLE)) {
+      preparedStatement.setString(1, id);
+      final ResultSet resultSet = preparedStatement.executeQuery();
+      if (!resultSet.next()) return null;
+      final FetcherFactory fetcherFactory = this.dataSource.getAbstractFetcher().getFetcherFactory();
+      final Article article = fetcherFactory.createArticle();
+
+      article.setId(resultSet.getString("article_id"));
+      article.setTitle(resultSet.getString("title"));
+      article.setUrl(resultSet.getString("url"));
+      article.setReleaseTime(resultSet.getTimestamp("release_time"));
+      article.setFetchTime(resultSet.getTimestamp("fetch_time"));
+      article.setFileIdentification(resultSet.getString("file_hash"));
+      article.setContent(resultSet.getString("article_content"));
+      return article;
+    }
+  }
+
+  @Override
   public void updateArticle(final Article article) {
 
   }
 
-  public void updateArticleContent(final Article article) {
-
+  @Override
+  public void updateArticleContent(final Article article) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(UPDATE_ARTICLE_CONTENT)) {
+      preparedStatement.setString(1, article.getContent());
+      preparedStatement.setString(2, article.getId());
+      preparedStatement.execute();
+    }
   }
 
+  @Override
   public boolean hasArticle(final String id) {
-    return false;
+    return has(HAS_ARTICLE, id);
   }
 
+  @Override
   public void updateLocationLinks(final Article article) {
 
   }
 
+  @Override
   public void updateTopicLinks(final Article article) {
 
   }
 
-  public void addLocation(final Location location) {
-
+  @Override
+  public void addLocation(final Location location) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_LOCATION)) {
+      preparedStatement.setString(1, location.getLocationName());
+      preparedStatement.setDouble(2, location.getLatitude());
+      preparedStatement.setDouble(3, location.getLongitude());
+      preparedStatement.execute();
+    }
   }
 
-  public Location getLocation(final String id) {
-    return null;
+  @Override
+  public Location getLocation(final String id) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(SELECT_LOCATION)) {
+      preparedStatement.setString(1, id);
+      final ResultSet resultSet = preparedStatement.executeQuery();
+      if (!resultSet.next()) return null;
+      final FetcherFactory fetcherFactory = this.dataSource.getAbstractFetcher().getFetcherFactory();
+      final Location location = fetcherFactory.createLocation();
+
+      location.setId(resultSet.getString("uuid"));
+      location.setLocationName(resultSet.getString("location"));
+      location.setLatitude(resultSet.getDouble("latitude"));
+      location.setLongitude(resultSet.getDouble("longitude"));
+      location.setIndexed(resultSet.getBoolean("indexed"));
+      return location;
+    }
   }
 
+  @Override
   public boolean hasLocation(final String id) {
-    return false;
+    return has(HAS_LOCATION, id);
   }
 
-  public void addTopic(final Topic topic) {
-
+  @Override
+  public void addTopic(final Topic topic) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_TOPIC)) {
+      preparedStatement.setString(1, topic.getTopicName());
+      preparedStatement.execute();
+    }
   }
 
-  public Topic getTopic(final String id) {
-    return null;
+  @Override
+  public Topic getTopic(final String id) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(SELECT_TOPIC)) {
+      preparedStatement.setString(1, id);
+      final ResultSet resultSet = preparedStatement.executeQuery();
+      if (!resultSet.next()) return null;
+      final FetcherFactory fetcherFactory = this.dataSource.getAbstractFetcher().getFetcherFactory();
+      final Topic topic = fetcherFactory.createTopic();
+
+      topic.setId(resultSet.getString("uuid"));
+      topic.setTopicName(resultSet.getString("topic"));
+      return topic;
+    }
   }
 
+  @Override
   public boolean hasTopic(final String id) {
-    return false;
+    return has(HAS_TOPIC, id);
   }
 
   private void executeStream(final BufferedReader bufferedReader) throws SQLException, IOException {
@@ -120,6 +204,18 @@ public class PostgresDao implements SqlDao {
       }
       statement.executeBatch();
     }
+  }
+
+  private boolean has(final String query, final String firstIdentifier) {
+    try (PreparedStatement preparedStatement = this.connection.prepareStatement(query)) {
+      preparedStatement.setString(1, firstIdentifier);
+      try (ResultSet resultSet = preparedStatement.executeQuery()) {
+        return resultSet.next();
+      }
+    } catch (SQLException e) {
+      LOGGER.error("Error while executing query", e);
+    }
+    return false;
   }
 
   private boolean hasTable(final String tableName) throws SQLException {
