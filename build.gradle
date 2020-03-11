@@ -23,13 +23,13 @@ dependencies {
     implementation project(':fetcher-api')
 
     //https://github.com/ben-manes/caffeine
-    implementation 'com.github.ben-manes.caffeine:caffeine:2.8.1'
+    compile 'com.github.ben-manes.caffeine:caffeine:2.8.1'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
     // https://mvnrepository.com/artifact/com.google.collections/google-collections
-    implementation group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    compile group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
+    compile 'com.google.code.gson:gson:2.8.6'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }

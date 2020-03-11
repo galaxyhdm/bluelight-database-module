@@ -6,7 +6,7 @@ import dev.markusk.bluelight.api.data.AbstractDataManager;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
-import dev.markusk.projectbluelight.util.ThrowingFunction;
+import dev.markusk.bluelight.util.ThrowingFunction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.postgresql.ds.PGConnectionPoolDataSource;
@@ -36,7 +36,6 @@ public class PostgresDataManager implements AbstractDataManager {
     LOGGER.info("Connecting to postgres-database...");
     this.abstractFetcher = abstractFetcher;
 
-    // TODO: 07.03.2020 add credentials to .env file
     this.dataSource = new PGConnectionPoolDataSource();
     this.dataSource.setServerNames(new String[]{Environment.SQL_HOST});
     this.dataSource.setPortNumbers(new int[]{Environment.SQL_PORT});
