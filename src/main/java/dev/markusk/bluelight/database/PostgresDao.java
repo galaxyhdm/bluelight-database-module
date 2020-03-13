@@ -97,7 +97,7 @@ public class PostgresDao implements SqlDao {
 
   @Override
   public void updateArticle(final Article article) {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -116,12 +116,12 @@ public class PostgresDao implements SqlDao {
 
   @Override
   public void updateLocationLinks(final Article article) {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void updateTopicLinks(final Article article) {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
