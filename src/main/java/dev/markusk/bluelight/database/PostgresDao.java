@@ -1,6 +1,5 @@
 package dev.markusk.bluelight.database;
 
-import dev.markusk.bluelight.api.factory.FetcherFactory;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
@@ -81,8 +80,7 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final FetcherFactory fetcherFactory = this.dataSource.getAbstractFetcher().getFetcherFactory();
-      final Article article = fetcherFactory.createArticle();
+      final Article article = new Article();
 
       article.setId(resultSet.getString("article_id"));
       article.setTitle(resultSet.getString("title"));
@@ -140,8 +138,7 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final FetcherFactory fetcherFactory = this.dataSource.getAbstractFetcher().getFetcherFactory();
-      final Location location = fetcherFactory.createLocation();
+      final Location location = new Location();
 
       location.setId(resultSet.getString("uuid"));
       location.setLocationName(resultSet.getString("location"));
@@ -171,8 +168,7 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final FetcherFactory fetcherFactory = this.dataSource.getAbstractFetcher().getFetcherFactory();
-      final Topic topic = fetcherFactory.createTopic();
+      final Topic topic = new Topic();
 
       topic.setId(resultSet.getString("uuid"));
       topic.setTopicName(resultSet.getString("topic"));
