@@ -2,6 +2,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'java'
+    id 'java-library'
     id 'com.github.johnrengelman.shadow' version '4.0.2'
 }
 
@@ -19,17 +20,17 @@ repositories {
 }
 
 dependencies {
-    implementation project(':util-module')
-    implementation project(':fetcher-api')
+    api project(':util-module')
+    api project(':fetcher-api')
 
     //https://github.com/ben-manes/caffeine
-    compile 'com.github.ben-manes.caffeine:caffeine:2.8.1'
+    api 'com.github.ben-manes.caffeine:caffeine:2.8.1'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
+    api group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
     // https://mvnrepository.com/artifact/com.google.collections/google-collections
-    compile group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
-    compile 'com.google.code.gson:gson:2.8.6'
+    api group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
+    api 'com.google.code.gson:gson:2.8.6'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
