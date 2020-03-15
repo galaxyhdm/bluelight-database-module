@@ -1,5 +1,6 @@
 package dev.markusk.bluelight.database;
 
+import dev.markusk.bluelight.api.builder.ArticleBuilder;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
@@ -80,15 +81,15 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final Article article = new Article();
-
-      article.setId(resultSet.getString("article_id"));
-      article.setTitle(resultSet.getString("title"));
-      article.setUrl(resultSet.getString("url"));
-      article.setReleaseTime(resultSet.getTimestamp("release_time"));
-      article.setFetchTime(resultSet.getTimestamp("fetch_time"));
-      article.setFileIdentification(resultSet.getString("file_hash"));
-      article.setContent(resultSet.getString("article_content"));
+      final Article article = new ArticleBuilder()
+          .id(resultSet.getString("article_id"))
+          .title(resultSet.getString("title"))
+          .url(resultSet.getString("url"))
+          .releaseTime(resultSet.getTimestamp("release_time"))
+          .fetchTime(resultSet.getTimestamp("fetch_time"))
+          .fileIdentification(resultSet.getString("file_hash"))
+          .content(resultSet.getString("article_content"))
+          .createArticle();
       return article;
     }
   }
