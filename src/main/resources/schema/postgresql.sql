@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 create table if not exists articles
 (
-    article_id      integer     not null
+    article_id      text        not null
         constraint articles_pk
             primary key,
     title           text        not null,
@@ -9,7 +9,7 @@ create table if not exists articles
     release_time    timestamp   not null,
     fetch_time      timestamp   not null,
     file_hash       varchar(64) not null,
-    article_content text        not null
+    article_content text
 );
 
 alter table articles
@@ -57,7 +57,7 @@ create table if not exists article_topic
     uuid       uuid default uuid_generate_v4() not null
         constraint article_topic_pk
             primary key,
-    article_id integer                         not null
+    article_id text                            not null
         constraint article_topic_articles_article_id_fk
             references articles,
     topic_uuid uuid
@@ -76,7 +76,7 @@ create table if not exists article_location
     uuid          uuid default uuid_generate_v4() not null
         constraint article_location_pk
             primary key,
-    article_id    integer                         not null
+    article_id    text                            not null
         constraint article_location_articles_article_id_fk
             references articles,
     location_uuid uuid
@@ -89,4 +89,3 @@ alter table article_location
 
 create unique index if not exists article_location_uuid_uindex
     on article_location (uuid);
-

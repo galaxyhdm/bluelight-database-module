@@ -32,7 +32,7 @@ public class PostgresDataManager implements AbstractDataManager {
   }
 
   @Override
-  public boolean initialize(final AbstractFetcher abstractFetcher) {
+  public boolean initialize(final AbstractFetcher abstractFetcher) { // TODO: 21.03.2020 add db configuration
     LOGGER.info("Connecting to postgres-database...");
     this.abstractFetcher = abstractFetcher;
 
@@ -62,7 +62,7 @@ public class PostgresDataManager implements AbstractDataManager {
       LOGGER.error("Could not connect to SQL database!", e);
       return false;
     }
-    LOGGER.info(String.format("Connected to sql-database. (Database: %s)", "bminer"));
+    LOGGER.info(String.format("Connected to sql-database. (Database: %s)", Environment.SQL_DATABASE));
     return true;
   }
 
