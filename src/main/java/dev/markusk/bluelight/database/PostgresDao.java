@@ -22,14 +22,22 @@ public class PostgresDao implements SqlDao {
   private static final String HAS_ARTICLE = "SELECT articles.article_id FROM articles WHERE article_id = ?";
   private static final String SELECT_LOCATION = "SELECT locations.* FROM locations WHERE uuid = ?;";
   private static final String HAS_LOCATION = "SELECT locations.uuid FROM locations WHERE uuid = ?";
+  private static final String HAS_LOCATION_NAME = "SELECT locations.uuid FROM locations WHERE location = ?";
   private static final String SELECT_TOPIC = "SELECT topics.* FROM topics WHERE uuid = ?;";
   private static final String HAS_TOPIC = "SELECT topics.uuid FROM topics WHERE uuid = ?";
+  private static final String HAS_TOPIC_NAME = "SELECT topics.uuid FROM topics WHERE topic = ?";
 
   private static final String INSERT_ARTICLE =
       "INSERT INTO articles(article_id, title, url, release_time, fetch_time, file_hash, article_content) VALUES (?,?,?,?,?,?,?)";
   private static final String INSERT_LOCATION =
       "INSERT INTO locations(location, latitude, longitude, indexed) VALUES (?,?,?,false);";
+  private static final String INSERT_LOCATION_WITH_NULL =
+      "INSERT INTO locations(location, indexed) VALUES (?,false);";
   private static final String INSERT_TOPIC = "INSERT INTO topics(topic) VALUES (?)";
+  private static final String INSERT_LOCATION_LINK =
+      "INSERT INTO article_location(article_id, location_uuid) VALUES (?, (SELECT locations.uuid FROM locations WHERE locations.location=?))";
+  private static final String INSERT_TOPIC_LINK =
+      "INSERT INTO article_topic(article_id, topic_uuid) VALUES (?, (SELECT topics.uuid FROM topics WHERE topic=?))";
 
   private static final String UPDATE_ARTICLE_CONTENT = "UPDATE articles SET article_content=? WHERE article_id=?";
 
@@ -114,22 +122,59 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
-  public void updateLocationLinks(final Article article) {
-    throw new UnsupportedOperationException();
+  public void updateLocationLinks(final Article article) throws SQLException { //Only setting is currently available
+    if (article.getLocationTags() == null || article.getLocationTags().isEmpty())
+      throw new NullPointerException("location tags must be set!");
+    for (final Location locationTag : article.getLocationTags()) {
+      if (!this.hasLocationByName(locationTag.getLocationName())) {
+        this.addLocation(locationTag);
+      }
+      this.addLocationLink(article.getId(), locationTag.getLocationName());
+    }
+  }
+
+  private void addLocationLink(final String articleId, final String locationName) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_LOCATION_LINK)) {
+      preparedStatement.setString(1, articleId);
+      preparedStatement.setString(2, locationName);
+      preparedStatement.execute();
+    }
   }
 
   @Override
-  public void updateTopicLinks(final Article article) {
-    throw new UnsupportedOperationException();
+  public void updateTopicLinks(final Article article) throws SQLException {
+    if (article.getTopicTags() == null || article.getTopicTags().isEmpty())
+      throw new NullPointerException("topic tags must be set!");
+    for (final Topic topic : article.getTopicTags()) {
+      if (!this.hasTopicByName(topic.getTopicName())) {
+        this.addTopic(topic);
+      }
+      this.addTopicLink(article.getId(), topic.getTopicName());
+    }
+  }
+
+  private void addTopicLink(final String articleId, final String topicName) throws SQLException {
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_TOPIC_LINK)) {
+      preparedStatement.setString(1, articleId);
+      preparedStatement.setString(2, topicName);
+      preparedStatement.execute();
+    }
   }
 
   @Override
   public void addLocation(final Location location) throws SQLException {
-    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_LOCATION)) {
-      preparedStatement.setString(1, location.getLocationName());
-      preparedStatement.setDouble(2, location.getLatitude());
-      preparedStatement.setDouble(3, location.getLongitude());
-      preparedStatement.execute();
+    if (location.getLatitude() == null || location.getLongitude() == null) {
+      try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_LOCATION_WITH_NULL)) {
+        preparedStatement.setString(1, location.getLocationName());
+        preparedStatement.execute();
+      }
+    } else {
+      try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_LOCATION)) {
+        preparedStatement.setString(1, location.getLocationName());
+        preparedStatement.setDouble(2, location.getLatitude());
+        preparedStatement.setDouble(3, location.getLongitude());
+        preparedStatement.execute();
+      }
     }
   }
 
@@ -153,6 +198,11 @@ public class PostgresDao implements SqlDao {
   @Override
   public boolean hasLocation(final String id) {
     return has(HAS_LOCATION, id);
+  }
+
+  @Override
+  public boolean hasLocationByName(final String locationName) throws SQLException {
+    return has(HAS_LOCATION_NAME, locationName);
   }
 
   @Override
@@ -180,6 +230,11 @@ public class PostgresDao implements SqlDao {
   @Override
   public boolean hasTopic(final String id) {
     return has(HAS_TOPIC, id);
+  }
+
+  @Override
+  public boolean hasTopicByName(final String topicName) throws SQLException {
+    return has(HAS_TOPIC_NAME, topicName);
   }
 
   private void executeStream(final BufferedReader bufferedReader) throws SQLException, IOException {
