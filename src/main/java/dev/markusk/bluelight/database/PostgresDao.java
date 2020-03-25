@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PostgresDao implements SqlDao {
 
@@ -26,6 +28,10 @@ public class PostgresDao implements SqlDao {
   private static final String SELECT_TOPIC = "SELECT topics.* FROM topics WHERE uuid = ?;";
   private static final String HAS_TOPIC = "SELECT topics.uuid FROM topics WHERE uuid = ?";
   private static final String HAS_TOPIC_NAME = "SELECT topics.uuid FROM topics WHERE topic = ?";
+  private static final String SELECT_LOCATIONS_FROM_ARTICLE =
+      "SELECT locations.* FROM locations INNER JOIN article_location al on locations.uuid = al.location_uuid WHERE al.article_id = ?";
+  private static final String SELECT_TOPICS_FROM_ARTICLE =
+      "SELECT topics.* FROM topics INNER JOIN article_topic a on topics.uuid = a.topic_uuid WHERE a.article_id = ?";
 
   private static final String INSERT_ARTICLE =
       "INSERT INTO articles(article_id, title, url, release_time, fetch_time, file_hash, article_content) VALUES (?,?,?,?,?,?,?)";
@@ -142,6 +148,19 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
+  public Set<Location> getLocations(final String articleId) throws SQLException {
+    final Set<Location> locations = new HashSet<>();
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(SELECT_LOCATIONS_FROM_ARTICLE)) {
+      preparedStatement.setString(1, articleId);
+      final ResultSet resultSet = preparedStatement.executeQuery();
+      while (resultSet.next()) {
+        locations.add(getLocationFromResult(resultSet));
+      }
+    }
+    return locations;
+  }
+
+  @Override
   public void updateTopicLinks(final Article article) throws SQLException {
     if (article.getTopicTags() == null || article.getTopicTags().isEmpty())
       throw new NullPointerException("topic tags must be set!");
@@ -159,6 +178,19 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(2, topicName);
       preparedStatement.execute();
     }
+  }
+
+  @Override
+  public Set<Topic> getTopics(final String articleId) throws SQLException {
+    final Set<Topic> topics = new HashSet<>();
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(SELECT_TOPICS_FROM_ARTICLE)) {
+      preparedStatement.setString(1, articleId);
+      final ResultSet resultSet = preparedStatement.executeQuery();
+      while (resultSet.next()) {
+        topics.add(getTopicFromResult(resultSet));
+      }
+    }
+    return topics;
   }
 
   @Override
@@ -184,14 +216,7 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final Location location = new Location();
-
-      location.setId(resultSet.getString("uuid"));
-      location.setLocationName(resultSet.getString("location"));
-      location.setLatitude(resultSet.getDouble("latitude"));
-      location.setLongitude(resultSet.getDouble("longitude"));
-      location.setIndexed(resultSet.getBoolean("indexed"));
-      return location;
+      return getLocationFromResult(resultSet);
     }
   }
 
@@ -201,7 +226,7 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
-  public boolean hasLocationByName(final String locationName) throws SQLException {
+  public boolean hasLocationByName(final String locationName) {
     return has(HAS_LOCATION_NAME, locationName);
   }
 
@@ -219,11 +244,7 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final Topic topic = new Topic();
-
-      topic.setId(resultSet.getString("uuid"));
-      topic.setTopicName(resultSet.getString("topic"));
-      return topic;
+      return getTopicFromResult(resultSet);
     }
   }
 
@@ -233,8 +254,25 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
-  public boolean hasTopicByName(final String topicName) throws SQLException {
+  public boolean hasTopicByName(final String topicName) {
     return has(HAS_TOPIC_NAME, topicName);
+  }
+
+  private Location getLocationFromResult(final ResultSet resultSet) throws SQLException {
+    final Location location = new Location();
+    location.setId(resultSet.getString("uuid"));
+    location.setLocationName(resultSet.getString("location"));
+    location.setLatitude(resultSet.getDouble("latitude"));
+    location.setLongitude(resultSet.getDouble("longitude"));
+    location.setIndexed(resultSet.getBoolean("indexed"));
+    return location;
+  }
+
+  private Topic getTopicFromResult(final ResultSet resultSet) throws SQLException {
+    final Topic topic = new Topic();
+    topic.setId(resultSet.getString("uuid"));
+    topic.setTopicName(resultSet.getString("topic"));
+    return topic;
   }
 
   private void executeStream(final BufferedReader bufferedReader) throws SQLException, IOException {

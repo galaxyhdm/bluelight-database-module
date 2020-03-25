@@ -15,6 +15,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class PostgresDataManager implements AbstractDataManager {
 
@@ -83,11 +84,14 @@ public class PostgresDataManager implements AbstractDataManager {
   }
 
   @Override
-  public Optional<Article> getArticle(final String id, final boolean loadTags) { // TODO: 08.03.2020 implement correctly
+  public Optional<Article> getArticle(final String id, final boolean loadTags) {
     try (final SqlDao dao = this.getDao()) {
-      if (!loadTags) {
-        return Optional.ofNullable(dao.getArticle(id));
+      final Article article = dao.getArticle(id);
+      if (loadTags) {
+        article.setLocationTags(dao.getLocations(article.getId()));
+        article.setTopicTags(dao.getTopics(article.getId()));
       }
+      return Optional.ofNullable(article);
     } catch (Exception e) {
       LOGGER.error("Error in getArticle", e);
     }
@@ -132,12 +136,32 @@ public class PostgresDataManager implements AbstractDataManager {
   }
 
   @Override
+  public Set<Location> getLocations(final String articleId) {
+    try (final SqlDao dao = this.getDao()) {
+      return dao.getLocations(articleId);
+    } catch (Exception e) {
+      LOGGER.error("Error in getLocations", e);
+    }
+    return null;
+  }
+
+  @Override
   public void updateTopicLinks(final Article article) {
     try (final SqlDao dao = this.getDao()) {
       dao.updateTopicLinks(article);
     } catch (Exception e) {
       LOGGER.error("Error in updateTopicLinks", e);
     }
+  }
+
+  @Override
+  public Set<Topic> getTopics(final String articleId) {
+    try (final SqlDao dao = this.getDao()) {
+      return dao.getTopics(articleId);
+    } catch (Exception e) {
+      LOGGER.error("Error in getTopics", e);
+    }
+    return null;
   }
 
   @Override
