@@ -30,7 +30,6 @@ dependencies {
     api group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
     // https://mvnrepository.com/artifact/com.google.collections/google-collections
     api group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
-    api 'com.google.code.gson:gson:2.8.6'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }

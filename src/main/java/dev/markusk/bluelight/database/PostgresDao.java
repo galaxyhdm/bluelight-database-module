@@ -128,7 +128,8 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
-  public void updateLocationLinks(final Article article) throws SQLException { //Only setting is currently available
+  public void updateLocationLinks(final Article article)
+      throws SQLException { //Only set is currently available, update to remove usw.
     if (article.getLocationTags() == null || article.getLocationTags().isEmpty())
       throw new NullPointerException("location tags must be set!");
     for (final Location locationTag : article.getLocationTags()) {
@@ -139,7 +140,8 @@ public class PostgresDao implements SqlDao {
     }
   }
 
-  private void addLocationLink(final String articleId, final String locationName) throws SQLException {
+  private void addLocationLink(final String articleId, final String locationName)
+      throws SQLException { // check for existing
     try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_LOCATION_LINK)) {
       preparedStatement.setString(1, articleId);
       preparedStatement.setString(2, locationName);
@@ -161,7 +163,8 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
-  public void updateTopicLinks(final Article article) throws SQLException {
+  public void updateTopicLinks(final Article article)
+      throws SQLException { //Only set is currently available, update to remove usw.
     if (article.getTopicTags() == null || article.getTopicTags().isEmpty())
       throw new NullPointerException("topic tags must be set!");
     for (final Topic topic : article.getTopicTags()) {
@@ -172,7 +175,7 @@ public class PostgresDao implements SqlDao {
     }
   }
 
-  private void addTopicLink(final String articleId, final String topicName) throws SQLException {
+  private void addTopicLink(final String articleId, final String topicName) throws SQLException {  // check for existing
     try (final PreparedStatement preparedStatement = this.connection.prepareStatement(INSERT_TOPIC_LINK)) {
       preparedStatement.setString(1, articleId);
       preparedStatement.setString(2, topicName);
