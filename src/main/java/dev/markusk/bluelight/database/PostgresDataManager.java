@@ -3,11 +3,11 @@ package dev.markusk.bluelight.database;
 import com.google.common.collect.ImmutableMap;
 import dev.markusk.bluelight.api.AbstractFetcher;
 import dev.markusk.bluelight.api.data.AbstractDataManager;
+import dev.markusk.bluelight.api.interfaces.DataSettings;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
 import dev.markusk.bluelight.util.ThrowingFunction;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.postgresql.ds.PGConnectionPoolDataSource;
 
@@ -19,8 +19,7 @@ import java.util.Set;
 
 public class PostgresDataManager implements AbstractDataManager {
 
-  private static final Logger LOGGER = LogManager.getLogger();
-
+  private Logger logger;
   private AbstractFetcher abstractFetcher;
   private PGConnectionPoolDataSource dataSource;
 
@@ -33,37 +32,39 @@ public class PostgresDataManager implements AbstractDataManager {
   }
 
   @Override
-  public boolean initialize(final AbstractFetcher abstractFetcher) { // TODO: 21.03.2020 add db configuration
-    LOGGER.info("Connecting to postgres-database...");
+  public boolean initialize(final AbstractFetcher abstractFetcher, final DataSettings dataSettings) {
     this.abstractFetcher = abstractFetcher;
+    this.logger = this.abstractFetcher.getLogger();
+    this.logger.info("Connecting to postgres-database...");
 
     this.dataSource = new PGConnectionPoolDataSource();
-    this.dataSource.setServerNames(new String[]{Environment.SQL_HOST});
-    this.dataSource.setPortNumbers(new int[]{Environment.SQL_PORT});
-    this.dataSource.setDatabaseName(Environment.SQL_DATABASE);
-    this.dataSource.setUser(Environment.SQL_USER);
-    this.dataSource.setPassword(Environment.SQL_PASSWORD);
+//    this.dataSource.setServerNames(new String[]{postgresDataSettings.getHost()});
+//    this.dataSource.setPortNumbers(new int[]{postgresDataSettings.getPort()});
+//    this.dataSource.setDatabaseName(postgresDataSettings.getDatabase());
+//    this.dataSource.setUser(postgresDataSettings.getUser());
+//    this.dataSource.setPassword(postgresDataSettings.getPassword());
+    this.dataSource.setUrl(dataSettings.getConnectionUrl());
 
     try (final Connection connection = this.dataSource.getConnection()) {
       final String database = connection.getMetaData().getDatabaseProductName().toLowerCase();
       this.daoFactory = this.daoImplementations.get(database);
       if (this.daoFactory == null) {
-        LOGGER.error(String.format("Database implementation %s is not supported!", database));
+        this.logger.error(String.format("Database implementation %s is not supported!", database));
         return false;
       } else
-        LOGGER.debug(String.format("Found supported database implementation: %s", database));
+        this.logger.debug(String.format("Found supported database implementation: %s", database));
     } catch (Exception e) {
-      LOGGER.error("Error while pooledConnection to database", e);
+      this.logger.error("Error while pooledConnection to database", e);
       return false;
     }
 
     try (SqlDao dao = this.getDao()) {
       dao.initializeTables();
     } catch (Exception e) {
-      LOGGER.error("Could not connect to SQL database!", e);
+      this.logger.error("Could not connect to SQL database!", e);
       return false;
     }
-    LOGGER.info(String.format("Connected to sql-database. (Database: %s)", Environment.SQL_DATABASE));
+    this.logger.info(String.format("Connected to sql-database. (Database: %s)", this.dataSource.getDatabaseName()));
     return true;
   }
 
@@ -71,7 +72,7 @@ public class PostgresDataManager implements AbstractDataManager {
   public void close() {
     this.dataSource = null;
     this.daoFactory = null;
-    LOGGER.info("SqlDataSource closed!");
+    this.logger.info("SqlDataSource closed!");
   }
 
   @Override
@@ -79,7 +80,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.addArticle(article);
     } catch (Exception e) {
-      LOGGER.error("Error in addArticle", e);
+      this.logger.error("Error in addArticle", e);
     }
   }
 
@@ -93,7 +94,7 @@ public class PostgresDataManager implements AbstractDataManager {
       }
       return Optional.ofNullable(article);
     } catch (Exception e) {
-      LOGGER.error("Error in getArticle", e);
+      this.logger.error("Error in getArticle", e);
     }
     return Optional.empty();
   }
@@ -103,7 +104,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.updateArticle(article);
     } catch (Exception e) {
-      LOGGER.error("Error in updateArticle", e);
+      this.logger.error("Error in updateArticle", e);
     }
   }
 
@@ -112,7 +113,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.updateArticleContent(article);
     } catch (Exception e) {
-      LOGGER.error("Error in updateArticleContent", e);
+      this.logger.error("Error in updateArticleContent", e);
     }
   }
 
@@ -121,7 +122,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return dao.hasArticle(id);
     } catch (Exception e) {
-      LOGGER.error("Error in hasArticle", e);
+      this.logger.error("Error in hasArticle", e);
     }
     return false;
   }
@@ -131,7 +132,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.updateLocationLinks(article);
     } catch (Exception e) {
-      LOGGER.error("Error in updateLocationLinks", e);
+      this.logger.error("Error in updateLocationLinks", e);
     }
   }
 
@@ -140,7 +141,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return dao.getLocations(articleId);
     } catch (Exception e) {
-      LOGGER.error("Error in getLocations", e);
+      this.logger.error("Error in getLocations", e);
     }
     return null;
   }
@@ -150,7 +151,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.updateTopicLinks(article);
     } catch (Exception e) {
-      LOGGER.error("Error in updateTopicLinks", e);
+      this.logger.error("Error in updateTopicLinks", e);
     }
   }
 
@@ -159,7 +160,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return dao.getTopics(articleId);
     } catch (Exception e) {
-      LOGGER.error("Error in getTopics", e);
+      this.logger.error("Error in getTopics", e);
     }
     return null;
   }
@@ -169,7 +170,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.addLocation(location);
     } catch (Exception e) {
-      LOGGER.error("Error in addLocation", e);
+      this.logger.error("Error in addLocation", e);
     }
   }
 
@@ -178,7 +179,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return Optional.ofNullable(dao.getLocation(id));
     } catch (Exception e) {
-      LOGGER.error("Error in getLocation", e);
+      this.logger.error("Error in getLocation", e);
     }
     return Optional.empty();
   }
@@ -188,7 +189,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return dao.hasLocation(id);
     } catch (Exception e) {
-      LOGGER.error("Error in hasLocation", e);
+      this.logger.error("Error in hasLocation", e);
     }
     return false;
   }
@@ -198,7 +199,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       dao.addTopic(topic);
     } catch (Exception e) {
-      LOGGER.error("Error in addTopic", e);
+      this.logger.error("Error in addTopic", e);
     }
   }
 
@@ -207,7 +208,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return Optional.ofNullable(dao.getTopic(id));
     } catch (Exception e) {
-      LOGGER.error("Error in hasArticle", e);
+      this.logger.error("Error in hasArticle", e);
     }
     return Optional.empty();
   }
@@ -217,7 +218,7 @@ public class PostgresDataManager implements AbstractDataManager {
     try (final SqlDao dao = this.getDao()) {
       return dao.hasTopic(id);
     } catch (Exception e) {
-      LOGGER.error("Error in hasTopic", e);
+      this.logger.error("Error in hasTopic", e);
     }
     return false;
   }

@@ -12,9 +12,6 @@ create table if not exists articles
     article_content text
 );
 
-alter table articles
-    owner to postgres;
-
 create table if not exists topics
 (
     uuid  uuid default uuid_generate_v4() not null
@@ -22,9 +19,6 @@ create table if not exists topics
             primary key,
     topic text                            not null
 );
-
-alter table topics
-    owner to postgres;
 
 create unique index if not exists topics_uuid_uindex
     on topics (uuid);
@@ -42,9 +36,6 @@ create table if not exists locations
     longitude double precision,
     indexed   boolean
 );
-
-alter table locations
-    owner to postgres;
 
 create unique index if not exists locations_uuid_uindex
     on locations (uuid);
@@ -65,9 +56,6 @@ create table if not exists article_topic
             references topics
 );
 
-alter table article_topic
-    owner to postgres;
-
 create unique index if not exists article_topic_uuid_uindex
     on article_topic (uuid);
 
@@ -83,9 +71,6 @@ create table if not exists article_location
         constraint article_location_locations_uuid_fk
             references locations
 );
-
-alter table article_location
-    owner to postgres;
 
 create unique index if not exists article_location_uuid_uindex
     on article_location (uuid);
