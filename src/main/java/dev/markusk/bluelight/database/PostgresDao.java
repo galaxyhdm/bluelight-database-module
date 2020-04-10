@@ -18,8 +18,6 @@ import java.util.Set;
 
 public class PostgresDao implements SqlDao {
 
-  private static final Logger LOGGER = LogManager.getLogger();
-
   private static final String SELECT_ARTICLE = "SELECT articles.* FROM articles WHERE article_id = ?;";
   private static final String HAS_ARTICLE = "SELECT articles.article_id FROM articles WHERE article_id = ?";
   private static final String SELECT_LOCATION = "SELECT locations.* FROM locations WHERE uuid = ?;";
@@ -47,12 +45,14 @@ public class PostgresDao implements SqlDao {
 
   private static final String UPDATE_ARTICLE_CONTENT = "UPDATE articles SET article_content=? WHERE article_id=?";
 
+  private Logger logger;
   private Connection connection;
   private PostgresDataManager dataSource;
 
   public PostgresDao(final PostgresDataManager dataSource) throws SQLException {
     this.dataSource = dataSource;
     this.connection = dataSource.getDataSource().getConnection();
+    this.logger = dataSource.getAbstractFetcher().getLogger();
   }
 
   @Override
@@ -61,17 +61,17 @@ public class PostgresDao implements SqlDao {
     final String database = this.connection.getMetaData().getDatabaseProductName().toLowerCase();
     try (final InputStream stream = SqlDao.class.getResourceAsStream(String.format("/schema/%s.sql", database))) {
       if (stream == null) {
-        LOGGER.error("Initial schema for " + database + " not available!");
+        logger.error("Initial schema for " + database + " not available!");
         return;
       }
       try (final BufferedReader bufferedReader = new BufferedReader(
           new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-        LOGGER.info("Creating schema: " + database);
+        logger.info("Creating schema: " + database);
         this.executeStream(bufferedReader);
-        LOGGER.info("Created schema: " + database);
+        logger.info("Created schema: " + database);
       }
     } catch (IOException e) {
-      LOGGER.error("Error initializeTables", e);
+      logger.error("Error initializeTables", e);
     }
   }
 
@@ -291,7 +291,7 @@ public class PostgresDao implements SqlDao {
           stringBuilder = new StringBuilder();
           if (!queryLine.isEmpty()) {
             statement.addBatch(queryLine);
-            LOGGER.debug("STREAM EXECUTION > add Batch: " + queryLine.replaceAll(" +", " "));
+            logger.debug("STREAM EXECUTION > add Batch: " + queryLine.replaceAll(" +", " "));
           }
         }
       }
@@ -306,7 +306,7 @@ public class PostgresDao implements SqlDao {
         return resultSet.next();
       }
     } catch (SQLException e) {
-      LOGGER.error("Error while executing query", e);
+      logger.error("Error while executing query", e);
     }
     return false;
   }
