@@ -34,7 +34,7 @@ create table if not exists locations
     location  text                            not null,
     latitude  double precision,
     longitude double precision,
-    indexed   boolean
+    indexed   boolean default false
 );
 
 create unique index if not exists locations_uuid_uindex

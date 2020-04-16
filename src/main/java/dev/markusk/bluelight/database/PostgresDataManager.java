@@ -88,11 +88,12 @@ public class PostgresDataManager implements AbstractDataManager {
   public Optional<Article> getArticle(final String id, final boolean loadTags) {
     try (final SqlDao dao = this.getDao()) {
       final Article article = dao.getArticle(id);
+      if (article == null) return Optional.empty();
       if (loadTags) {
         article.setLocationTags(dao.getLocations(article.getId()));
         article.setTopicTags(dao.getTopics(article.getId()));
       }
-      return Optional.ofNullable(article);
+      return Optional.of(article);
     } catch (Exception e) {
       this.logger.error("Error in getArticle", e);
     }
