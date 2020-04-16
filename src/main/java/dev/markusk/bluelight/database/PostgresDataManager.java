@@ -7,7 +7,7 @@ import dev.markusk.bluelight.api.data.DataSettings;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
-import dev.markusk.bluelight.util.ThrowingFunction;
+import dev.markusk.bluelight.api.util.ThrowingFunction;
 import org.apache.logging.log4j.Logger;
 import org.postgresql.ds.PGConnectionPoolDataSource;
 

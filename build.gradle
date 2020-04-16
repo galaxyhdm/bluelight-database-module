@@ -20,7 +20,6 @@ repositories {
 }
 
 dependencies {
-    api project(':util-module')
     api project(':fetcher-api')
 
     //https://github.com/ben-manes/caffeine
