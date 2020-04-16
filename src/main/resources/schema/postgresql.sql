@@ -28,10 +28,10 @@ create unique index if not exists topics_topic_uindex
 
 create table if not exists locations
 (
-    uuid      uuid default uuid_generate_v4() not null
+    uuid      uuid    default uuid_generate_v4() not null
         constraint locations_pk
             primary key,
-    location  text                            not null,
+    location  text                               not null,
     latitude  double precision,
     longitude double precision,
     indexed   boolean default false

@@ -4,7 +4,6 @@ import dev.markusk.bluelight.api.builder.ArticleBuilder;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
@@ -45,9 +44,9 @@ public class PostgresDao implements SqlDao {
 
   private static final String UPDATE_ARTICLE_CONTENT = "UPDATE articles SET article_content=? WHERE article_id=?";
 
-  private Logger logger;
-  private Connection connection;
-  private PostgresDataManager dataSource;
+  private final Logger logger;
+  private final Connection connection;
+  private final PostgresDataManager dataSource;
 
   public PostgresDao(final PostgresDataManager dataSource) throws SQLException {
     this.dataSource = dataSource;
