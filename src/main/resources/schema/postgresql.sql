@@ -53,7 +53,9 @@ create table if not exists article_topic
             references articles,
     topic_uuid uuid
         constraint article_topic_topics_uuid_fk
-            references topics
+            references topics,
+    constraint article_topic_pk_2
+        unique (article_id, topic_uuid)
 );
 
 create unique index if not exists article_topic_uuid_uindex
@@ -69,7 +71,9 @@ create table if not exists article_location
             references articles,
     location_uuid uuid
         constraint article_location_locations_uuid_fk
-            references locations
+            references locations,
+    constraint article_location_pk_2
+        unique (article_id, location_uuid)
 );
 
 create unique index if not exists article_location_uuid_uindex
