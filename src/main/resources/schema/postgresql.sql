@@ -12,6 +12,9 @@ create table if not exists articles
     article_content text
 );
 
+create unique index if not exists articles_file_hash_uindex
+    on articles (file_hash);
+
 create table if not exists topics
 (
     uuid  uuid default uuid_generate_v4() not null
