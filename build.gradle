@@ -3,6 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 plugins {
     id 'java'
     id 'java-library'
+    id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '4.0.2'
 }
 
@@ -20,15 +21,15 @@ repositories {
 }
 
 dependencies {
-    api project(':fetcher-api')
+    compileOnly project(':fetcher-api')
 
     //https://github.com/ben-manes/caffeine
-    api 'com.github.ben-manes.caffeine:caffeine:2.8.1'
+    //implementation 'com.github.ben-manes.caffeine:caffeine:2.8.1'
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
-    api group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
     // https://mvnrepository.com/artifact/com.google.collections/google-collections
-    api group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
+    implementation group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
@@ -75,4 +76,23 @@ build {
 
     jar.mustRunAfter clean
     shadowJar.mustRunAfter sourcesJar
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact shadowJar
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name 'deploy'
+            url = "https://nexus.markusk.dev/repository/maven-releases/"
+            credentials {
+                username = repoUser
+                password = repoPassword
+            }
+        }
+    }
 }

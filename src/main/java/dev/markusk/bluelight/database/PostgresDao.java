@@ -12,11 +12,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class PostgresDao implements SqlDao {
 
+  private static final String SELECT_ARTICLES = "SELECT articles.* FROM articles;";
   private static final String SELECT_ARTICLE = "SELECT articles.* FROM articles WHERE article_id = ?;";
   private static final String HAS_ARTICLE = "SELECT articles.article_id FROM articles WHERE article_id = ?";
   private static final String SELECT_LOCATION = "SELECT locations.* FROM locations WHERE uuid = ?;";
@@ -51,7 +54,7 @@ public class PostgresDao implements SqlDao {
   public PostgresDao(final PostgresDataManager dataSource) throws SQLException {
     this.dataSource = dataSource;
     this.connection = dataSource.getDataSource().getConnection();
-    this.logger = dataSource.getAbstractFetcher().getLogger();
+    this.logger = dataSource.getLogger();
   }
 
   @Override
@@ -94,17 +97,32 @@ public class PostgresDao implements SqlDao {
       preparedStatement.setString(1, id);
       final ResultSet resultSet = preparedStatement.executeQuery();
       if (!resultSet.next()) return null;
-      final Article article = new ArticleBuilder()
-          .id(resultSet.getString("article_id"))
-          .title(resultSet.getString("title"))
-          .url(resultSet.getString("url"))
-          .releaseTime(resultSet.getTimestamp("release_time"))
-          .fetchTime(resultSet.getTimestamp("fetch_time"))
-          .fileIdentification(resultSet.getString("file_hash"))
-          .content(resultSet.getString("article_content"))
-          .createArticle();
-      return article;
+      return this.getArticleByResult(resultSet);
     }
+  }
+
+  @Override
+  public List<Article> getArticles() throws SQLException {
+    final List<Article> articles = new ArrayList<>();
+    try (final PreparedStatement preparedStatement = this.connection.prepareStatement(SELECT_ARTICLES)) {
+      final ResultSet resultSet = preparedStatement.executeQuery();
+      while (resultSet.next()) {
+        articles.add(getArticleByResult(resultSet));
+      }
+    }
+    return articles;
+  }
+
+  private Article getArticleByResult(final ResultSet resultSet) throws SQLException {
+    return new ArticleBuilder()
+        .id(resultSet.getString("article_id"))
+        .title(resultSet.getString("title"))
+        .url(resultSet.getString("url"))
+        .releaseTime(resultSet.getTimestamp("release_time"))
+        .fetchTime(resultSet.getTimestamp("fetch_time"))
+        .fileIdentification(resultSet.getString("file_hash"))
+        .content(resultSet.getString("article_content"))
+        .createArticle();
   }
 
   @Override

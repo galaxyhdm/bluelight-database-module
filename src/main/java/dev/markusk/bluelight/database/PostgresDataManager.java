@@ -1,7 +1,6 @@
 package dev.markusk.bluelight.database;
 
 import com.google.common.collect.ImmutableMap;
-import dev.markusk.bluelight.api.AbstractFetcher;
 import dev.markusk.bluelight.api.data.AbstractDataManager;
 import dev.markusk.bluelight.api.data.DataSettings;
 import dev.markusk.bluelight.api.objects.Article;
@@ -13,6 +12,7 @@ import org.postgresql.ds.PGConnectionPoolDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -20,7 +20,6 @@ import java.util.Set;
 public class PostgresDataManager implements AbstractDataManager {
 
   private Logger logger;
-  private AbstractFetcher abstractFetcher;
   private PGConnectionPoolDataSource dataSource;
 
   private final Map<String, ThrowingFunction<PostgresDataManager, SqlDao, SQLException>> daoImplementations =
@@ -32,9 +31,8 @@ public class PostgresDataManager implements AbstractDataManager {
   }
 
   @Override
-  public boolean initialize(final AbstractFetcher abstractFetcher, final DataSettings dataSettings) {
-    this.abstractFetcher = abstractFetcher;
-    this.logger = this.abstractFetcher.getLogger();
+  public boolean initialize(final Logger logger, final DataSettings dataSettings) {
+    this.logger = logger;
     this.logger.info("Connecting to postgres-database...");
 
     this.dataSource = new PGConnectionPoolDataSource();
@@ -98,6 +96,23 @@ public class PostgresDataManager implements AbstractDataManager {
       this.logger.error("Error in getArticle", e);
     }
     return Optional.empty();
+  }
+
+  @Override
+  public List<Article> getArticles(final boolean loadTags) {
+    try (final SqlDao dao = this.getDao()) {
+      final List<Article> articles = dao.getArticles();
+      if (loadTags && !articles.isEmpty()) {
+        for (final Article article : articles) {
+          article.setLocationTags(dao.getLocations(article.getId()));
+          article.setTopicTags(dao.getTopics(article.getId()));
+        }
+      }
+      return articles;
+    } catch (Exception e) {
+      this.logger.error("Error in getArticles", e);
+    }
+    return List.of();
   }
 
   @Override
@@ -228,8 +243,7 @@ public class PostgresDataManager implements AbstractDataManager {
     return dataSource;
   }
 
-  public AbstractFetcher getAbstractFetcher() {
-    return this.abstractFetcher;
+  public Logger getLogger() {
+    return this.logger;
   }
-
 }

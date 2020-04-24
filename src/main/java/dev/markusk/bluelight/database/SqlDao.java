@@ -5,6 +5,7 @@ import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Set;
 
 public interface SqlDao extends AutoCloseable {
@@ -14,6 +15,8 @@ public interface SqlDao extends AutoCloseable {
   void addArticle(final Article article) throws SQLException;
 
   Article getArticle(final String id) throws SQLException;
+
+  List<Article> getArticles() throws SQLException;
 
   void updateArticle(final Article article) throws SQLException;
 
