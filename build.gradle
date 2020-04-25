@@ -90,8 +90,8 @@ publishing {
             name 'deploy'
             url = "https://nexus.markusk.dev/repository/maven-releases/"
             credentials {
-                username = repoUser
-                password = repoPassword
+                username = project.hasProperty('repoUser') ? project.property('repoUser') : 'user'
+                password = project.hasProperty('repoPassword') ? project.property('repoPassword') : 'password'
             }
         }
     }
