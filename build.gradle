@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'dev.markusk'
-version '0.0.1'
+version '0.0.2'
 
 sourceCompatibility = 1.11
 
@@ -30,6 +30,8 @@ dependencies {
     implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
     // https://mvnrepository.com/artifact/com.google.collections/google-collections
     implementation group: 'com.google.collections', name: 'google-collections', version: '1.0-rc2'
+    // https://mvnrepository.com/artifact/org.liquibase/liquibase-core
+    implementation group: 'org.liquibase', name: 'liquibase-core', version: '3.8.9'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }

@@ -1,4 +1,10 @@
+-- liquibase formatted sql
+
+-- changeset markusk:1588371151542-1
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+--rollback DROP EXTENSION IF EXISTS "uuid-ossp";
+
+-- changeset markusk:1588371151542-2
 create table if not exists articles
 (
     article_id      text        not null
@@ -14,7 +20,9 @@ create table if not exists articles
 
 create unique index if not exists articles_file_hash_uindex
     on articles (file_hash);
+--rollback DROP TABLE articles
 
+-- changeset markusk:1588371151542-3
 create table if not exists topics
 (
     uuid  uuid default uuid_generate_v4() not null
@@ -28,7 +36,9 @@ create unique index if not exists topics_uuid_uindex
 
 create unique index if not exists topics_topic_uindex
     on topics (topic);
+--rollback DROP TABLE topics
 
+-- changeset markusk:1588371151542-4
 create table if not exists locations
 (
     uuid      uuid    default uuid_generate_v4() not null
@@ -45,7 +55,9 @@ create unique index if not exists locations_uuid_uindex
 
 create unique index if not exists locations_location_uindex
     on locations (location);
+--rollback DROP TABLE locations
 
+-- changeset markusk:1588371151542-5
 create table if not exists article_topic
 (
     uuid       uuid default uuid_generate_v4() not null
@@ -63,7 +75,9 @@ create table if not exists article_topic
 
 create unique index if not exists article_topic_uuid_uindex
     on article_topic (uuid);
+--rollback DROP TABLE article_topic
 
+-- changeset markusk:1588371151542-6
 create table if not exists article_location
 (
     uuid          uuid default uuid_generate_v4() not null
@@ -81,3 +95,4 @@ create table if not exists article_location
 
 create unique index if not exists article_location_uuid_uindex
     on article_location (uuid);
+--rollback DROP TABLE article_location

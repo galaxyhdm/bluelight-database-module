@@ -1,16 +1,19 @@
 package dev.markusk.bluelight.database;
 
+import ch.qos.logback.classic.Level;
 import dev.markusk.bluelight.api.builder.ArticleBuilder;
 import dev.markusk.bluelight.api.objects.Article;
 import dev.markusk.bluelight.api.objects.Location;
 import dev.markusk.bluelight.api.objects.Topic;
+import liquibase.Liquibase;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.ClassLoaderResourceAccessor;
 import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -58,22 +61,13 @@ public class PostgresDao implements SqlDao {
   }
 
   @Override
-  public void initializeTables() throws SQLException {
-    if (this.hasTable("articles")) return;
-    final String database = this.connection.getMetaData().getDatabaseProductName().toLowerCase();
-    try (final InputStream stream = SqlDao.class.getResourceAsStream(String.format("/schema/%s.sql", database))) {
-      if (stream == null) {
-        logger.error("Initial schema for " + database + " not available!");
-        return;
-      }
-      try (final BufferedReader bufferedReader = new BufferedReader(
-          new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-        logger.info("Creating schema: " + database);
-        this.executeStream(bufferedReader);
-        logger.info("Created schema: " + database);
-      }
-    } catch (IOException e) {
-      logger.error("Error initializeTables", e);
+  public void initializeTables() {
+    this.setupLiquibaseLogger();
+    try (Liquibase liquibase = new Liquibase("schema/db.changelog-master.xml", new ClassLoaderResourceAccessor(),
+        DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(this.connection)))) {
+      liquibase.update("");
+    } catch (Exception e) {
+      this.logger.error("Error initializeTables", e);
     }
   }
 
@@ -146,7 +140,7 @@ public class PostgresDao implements SqlDao {
 
   @Override
   public void updateLocationLinks(final Article article)
-      throws SQLException { //Only set is currently available, update to remove usw.
+      throws SQLException { //todo Only set is currently available, update to remove usw.
     if (article.getLocationTags() == null || article.getLocationTags().isEmpty())
       throw new NullPointerException("location tags must be set!");
     for (final Location locationTag : article.getLocationTags()) {
@@ -181,7 +175,7 @@ public class PostgresDao implements SqlDao {
 
   @Override
   public void updateTopicLinks(final Article article)
-      throws SQLException { //Only set is currently available, update to remove usw.
+      throws SQLException { //todo Only set is currently available, update to remove usw.
     if (article.getTopicTags() == null || article.getTopicTags().isEmpty())
       throw new NullPointerException("topic tags must be set!");
     for (final Topic topic : article.getTopicTags()) {
@@ -336,4 +330,11 @@ public class PostgresDao implements SqlDao {
   public void close() throws Exception {
     this.connection.close();
   }
+
+  private void setupLiquibaseLogger() {
+    final org.slf4j.Logger liquibaseLogger = LoggerFactory.getLogger("liquibase");
+    if (!(liquibaseLogger instanceof ch.qos.logback.classic.Logger)) return;
+    ((ch.qos.logback.classic.Logger) liquibaseLogger).setLevel(Environment.DEBUG ? Level.INFO : Level.OFF);
+  }
+
 }
