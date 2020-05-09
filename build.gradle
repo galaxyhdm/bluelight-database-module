@@ -8,7 +8,7 @@ plugins {
 }
 
 group 'dev.markusk'
-version '0.0.2'
+version gitVersioner.versionName
 
 sourceCompatibility = 1.11
 
@@ -34,6 +34,10 @@ dependencies {
     implementation group: 'org.liquibase', name: 'liquibase-core', version: '3.8.9'
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
+}
+
+processResources {
+    filter(ReplaceTokens, tokens: [VERSION: version])
 }
 
 task sourcesForRelease(type: Copy) {

@@ -1,6 +1,6 @@
 {
   "main": "dev.markusk.bluelight.database.PostgresModule",
   "name": "PostgresModule",
-  "version": "0.0.1",
+  "version": "@VERSION@",
   "author": "Markus K."
 }
