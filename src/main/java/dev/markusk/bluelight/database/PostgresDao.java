@@ -67,7 +67,7 @@ public class PostgresDao implements SqlDao {
         DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(this.connection)))) {
       liquibase.update("");
     } catch (Exception e) {
-      this.logger.error("Error initializeTables", e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -317,9 +317,8 @@ public class PostgresDao implements SqlDao {
         return resultSet.next();
       }
     } catch (SQLException e) {
-      logger.error("Error while executing query", e);
+      throw new RuntimeException(e);
     }
-    return false;
   }
 
   private boolean hasTable(final String tableName) throws SQLException {
