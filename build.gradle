@@ -1,10 +1,33 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
+buildscript {
+    dependencies {
+        classpath 'com.pascalwelsch.gitversioner:gitversioner:0.4.1'
+    }
+}
+
 plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '4.0.2'
+}
+
+// https://github.com/passsy/gradle-gitVersioner-plugin
+apply plugin: 'com.pascalwelsch.gitversioner'
+gitVersioner {
+    def base = System.getenv('base')
+    def snap = System.getenv('snap')
+    baseBranch base == null ? 'development' : base
+    def snapshot = snap == null ? true : snap != 'false'
+    addSnapshot snapshot
+
+    addLocalChangesDetails false
+    if (snapshot) {
+        formatter = { gitVersioner ->
+            return "${gitVersioner.currentSha1Short}-SNAPSHOT"
+        }
+    }
 }
 
 group 'dev.markusk'
@@ -18,10 +41,13 @@ repositories {
     maven {
         url 'https://jitpack.io'
     }
+	maven {
+		url 'https://nexus.markusk.dev/repository/maven-public/'
+	}
 }
 
 dependencies {
-    compileOnly project(':fetcher-api')
+    compileOnly 'dev.markusk:fetcher-api:+'
 
     //https://github.com/ben-manes/caffeine
     //implementation 'com.github.ben-manes.caffeine:caffeine:2.8.1'
@@ -94,7 +120,9 @@ publishing {
     repositories {
         maven {
             name 'deploy'
-            url = "https://nexus.markusk.dev/repository/maven-releases/"
+			def releasesRepoUrl = "https://nexus.markusk.dev/repository/maven-releases/"
+			def snapshotsRepoUrl = "https://nexus.markusk.dev/repository/maven-snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             credentials {
                 username = project.hasProperty('repoUser') ? project.property('repoUser') : 'user'
                 password = project.hasProperty('repoPassword') ? project.property('repoPassword') : 'password'
