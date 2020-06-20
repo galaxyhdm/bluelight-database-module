@@ -2,7 +2,7 @@ package dev.markusk.bluelight.database;
 
 import dev.markusk.bluelight.api.modules.Module;
 
-public class PostgresModule extends Module {
+public class DatabaseModule extends Module {
 
   @Override
   public void enable() {
