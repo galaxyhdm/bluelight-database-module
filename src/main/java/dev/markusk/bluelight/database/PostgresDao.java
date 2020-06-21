@@ -108,7 +108,7 @@ public class PostgresDao implements SqlDao {
   }
 
   private Article getArticleByResult(final ResultSet resultSet) throws SQLException {
-    return new ArticleBuilder()
+    return this.dataSource.getFetcher().getObjectFactory().createArticleBuilder()
         .id(resultSet.getString("article_id"))
         .title(resultSet.getString("title"))
         .url(resultSet.getString("url"))
@@ -273,7 +273,7 @@ public class PostgresDao implements SqlDao {
   }
 
   private Location getLocationFromResult(final ResultSet resultSet) throws SQLException {
-    final Location location = new Location();
+    final Location location = this.dataSource.getFetcher().getObjectFactory().createLocation();
     location.setId(resultSet.getString("uuid"));
     location.setLocationName(resultSet.getString("location"));
     location.setLatitude(resultSet.getDouble("latitude"));
@@ -283,7 +283,7 @@ public class PostgresDao implements SqlDao {
   }
 
   private Topic getTopicFromResult(final ResultSet resultSet) throws SQLException {
-    final Topic topic = new Topic();
+    final Topic topic = this.dataSource.getFetcher().getObjectFactory().createTopic();
     topic.setId(resultSet.getString("uuid"));
     topic.setTopicName(resultSet.getString("topic"));
     return topic;

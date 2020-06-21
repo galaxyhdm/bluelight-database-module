@@ -1,6 +1,7 @@
 package dev.markusk.bluelight.database;
 
 import com.google.common.collect.ImmutableMap;
+import dev.markusk.bluelight.api.AbstractFetcher;
 import dev.markusk.bluelight.api.data.AbstractDataManager;
 import dev.markusk.bluelight.api.data.DataSettings;
 import dev.markusk.bluelight.api.objects.Article;
@@ -20,6 +21,7 @@ import java.util.Set;
 public class PostgresDataManager implements AbstractDataManager {
 
   private Logger logger;
+  private AbstractFetcher fetcher;
   private PGConnectionPoolDataSource dataSource;
 
   private final Map<String, ThrowingFunction<PostgresDataManager, SqlDao, SQLException>> daoImplementations =
@@ -31,8 +33,9 @@ public class PostgresDataManager implements AbstractDataManager {
   }
 
   @Override
-  public boolean initialize(final Logger logger, final DataSettings dataSettings) {
+  public boolean initialize(final Logger logger, final AbstractFetcher fetcher, final DataSettings dataSettings) {
     this.logger = logger;
+    this.fetcher = fetcher;
     this.logger.info("Connecting to postgres-database...");
 
     this.dataSource = new PGConnectionPoolDataSource();
@@ -241,6 +244,11 @@ public class PostgresDataManager implements AbstractDataManager {
 
   public PGConnectionPoolDataSource getDataSource() {
     return dataSource;
+  }
+
+  @Override
+  public AbstractFetcher getFetcher() {
+    return this.fetcher;
   }
 
   public Logger getLogger() {
