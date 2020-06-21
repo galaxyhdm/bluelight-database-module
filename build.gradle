@@ -48,7 +48,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'dev.markusk:fetcher-api:349'
+    compileOnly 'dev.markusk:fetcher-api:+'
 
     //https://github.com/ben-manes/caffeine
     //implementation 'com.github.ben-manes.caffeine:caffeine:2.8.1'
